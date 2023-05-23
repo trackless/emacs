@@ -19,7 +19,7 @@
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
 (column-number-mode)
-(add-hook 'prog-mode-hook #'show-paren-mode)
+(add-hook 'prog-mode-hook 'show-paren-mode)
 ;; Setting English Font
 (set-face-attribute
  'default nil :font "IBM Plex Mono 14")
@@ -93,7 +93,7 @@
   (setq ivy-use-virtual-buffers t)
   (setq ivy-count-format "(%d%d)")
   (setq enable-recursive-minibuffers t)
-  (setq search-default-mode #'char-fold-to-regexp)
+  (setq search-default-mode 'char-fold-to-regexp)
   :bind
   (("C-s" . 'swiper)
    ("M-y" . 'counsel-yank-pop)
@@ -191,10 +191,10 @@
 ;;ibuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 ;;org-mode
-(add-hook 'org-mode-hook #'turn-on-font-lock)
-(global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
+(add-hook 'org-mode-hook 'turn-on-font-lock)
+(global-set-key (kbd "C-c l") 'org-store-link)
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c c") 'org-capture)
 (setq org-latex-toc-command "\\tableofcontents \\clearpage")
 (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 (setq org-latex-listings 'minted)
@@ -261,11 +261,11 @@
   (let* ((separator (or separator ?\,))
          (n (count-matches (string separator) (point-at-bol) (point-at-eol)))
          (colors (cl-loop for i from 0 to 1.0 by (/ 2.0 n)
-                       collect (apply #'color-rgb-to-hex 
+                       collect (apply 'color-rgb-to-hex 
                                       (color-hsl-to-rgb i 0.3 0.5)))))
     (cl-loop for i from 2 to n by 2 
           for c in colors
           for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
           do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
 (add-hook 'csv-mode-hook 'csv-highlight)
-(add-hook 'csv-mode-hook '(lambda () (interactive) (toggle-truncate-lines nil)))
+(add-hook 'csv-mode-hook (lambda () (interactive) (toggle-truncate-lines nil)))
