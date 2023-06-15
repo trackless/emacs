@@ -3,12 +3,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(hc-zenburn))
+ '(custom-enabled-themes '(srcery))
  '(custom-safe-themes
-   '("a37d20710ab581792b7c9f8a075fcbb775d4ffa6c8bce9137c84951b1b453016" "628278136f88aa1a151bb2d6c8a86bf2b7631fbea5f0f76cba2a0079cd910f7d" default))
+   '("c5a81a42df109b02a9a68dfe0ed530080372c1a0bbcb374da77ee3a57e1be719" default))
  '(org-export-backends '(ascii html icalendar latex odt))
  '(package-selected-packages
-   '(hc-zenburn-theme neotree org-superstar orgalist cal-china-x magit python-mode color-theme-sanityinc-tomorrow evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower rainbow-delimiters counsel swiper ivy gruvbox-theme evil)))
+   '(srcery-theme hc-zenburn-theme neotree org-superstar orgalist cal-china-x magit python-mode color-theme-sanityinc-tomorrow evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower rainbow-delimiters counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -21,8 +21,10 @@
 (column-number-mode)
 (add-hook 'prog-mode-hook 'show-paren-mode)
 ;; Setting English Font
+;;(set-face-attribute
+;; 'default nil :font "IBM Plex Mono 14")
 (set-face-attribute
- 'default nil :font "IBM Plex Mono 14")
+ 'default nil :font "IntelOne Mono 14")
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
@@ -261,11 +263,11 @@
   (let* ((separator (or separator ?\,))
          (n (count-matches (string separator) (point-at-bol) (point-at-eol)))
          (colors (cl-loop for i from 0 to 1.0 by (/ 2.0 n)
-                       collect (apply 'color-rgb-to-hex 
-                                      (color-hsl-to-rgb i 0.3 0.5)))))
+			  collect (apply 'color-rgb-to-hex 
+					 (color-hsl-to-rgb i 0.3 0.5)))))
     (cl-loop for i from 2 to n by 2 
-          for c in colors
-          for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
-          do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
+             for c in colors
+             for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
+             do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
 (add-hook 'csv-mode-hook 'csv-highlight)
 (add-hook 'csv-mode-hook (lambda () (interactive) (toggle-truncate-lines nil)))
