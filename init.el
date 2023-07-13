@@ -5,10 +5,10 @@
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(srcery))
  '(custom-safe-themes
-   '("c5a81a42df109b02a9a68dfe0ed530080372c1a0bbcb374da77ee3a57e1be719" default))
+   '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "ff375cb365f7797dc6fdeabcce5aacefb3faa8c7877b6108f21dea9145e51382" default))
  '(org-export-backends '(ascii html icalendar latex odt))
  '(package-selected-packages
-   '(srcery-theme hc-zenburn-theme neotree org-superstar orgalist cal-china-x magit python-mode color-theme-sanityinc-tomorrow evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower rainbow-delimiters counsel swiper ivy gruvbox-theme evil)))
+   '(all-the-icons-ivy-rich all-the-icons undo-tree mwim highlight-parentheses org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -47,7 +47,7 @@
 ;;MELPA
 (require 'package)
 (setq package-archives 
-      '(("melpa" . "https://melpa.org/packages/")
+      '(("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")
 	("gnu" . "https://elpa.gnu.org/packages/")))
 ;;use-package
 (eval-when-compile
@@ -74,6 +74,7 @@
   (global-evil-leader-mode)
   (evil-leader/set-leader ",")
   (evil-leader/set-key
+    "b" 'switch-to-buffer
     "e" 'find-file
     "k" 'kill-buffer
     "w" 'save-buffer))
@@ -103,19 +104,22 @@
    ("C-c v" . 'ivy-push-view)
    ("C-c s" . 'ivy-switch-view)
    ("C-c V" . 'ivy-pop-view)
-   :map minibuffer-local-map
-   ("C-r" . counsel-minibuffer-history)))
+   :map minibuffer-local-map))
 ;;rainbow-delimiters
-(use-package rainbow-delimiters
+;;(use-package rainbow-delimiters
+;;  :ensure t
+;;  :hook
+;;  (foo-mode . rainbow-delimiters-mode)
+;;  (prog-mode . rainbow-delimiters-mode))
+;;highlight-parentheses
+(use-package highlight-parentheses
   :ensure t
-  :hook
-  (foo-mode . rainbow-delimiters-mode)
-  (prog-mode . rainbow-delimiters-mode))
+  :init
+  (global-highlight-parentheses-mode t))
 ;;amx
 (use-package amx
   :ensure t
-  :init
-  (amx-mode 1))
+  :init (amx-mode))
 ;;q-mode
 (autoload 'q-mode "q-mode")
 (add-to-list 'auto-mode-alist '("\\.[kq]\\'" . q-mode))
@@ -225,7 +229,7 @@
 (setq org-indent-mode-turns-on-hiding-stars nil)
 ;;org-refile-targets set
 (setq org-refile-targets (quote (("program.org" :maxlevel . 1)
-                                 ("work_todo.org" :level . 1))))
+				 ("work_todo.org" :level . 1))))
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-use-outline-path t)
 ;; Nice bullets
@@ -261,13 +265,34 @@
   (interactive (list (when current-prefix-arg (read-char "Separator: "))))
   (font-lock-mode 1)
   (let* ((separator (or separator ?\,))
-         (n (count-matches (string separator) (point-at-bol) (point-at-eol)))
-         (colors (cl-loop for i from 0 to 1.0 by (/ 2.0 n)
+	 (n (count-matches (string separator) (point-at-bol) (point-at-eol)))
+	 (colors (cl-loop for i from 0 to 1.0 by (/ 2.0 n)
 			  collect (apply 'color-rgb-to-hex 
 					 (color-hsl-to-rgb i 0.3 0.5)))))
     (cl-loop for i from 2 to n by 2 
-             for c in colors
-             for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
-             do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
+	     for c in colors
+	     for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
+	     do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
 (add-hook 'csv-mode-hook 'csv-highlight)
 (add-hook 'csv-mode-hook (lambda () (interactive) (toggle-truncate-lines nil)))
+;;mwim
+(use-package mwim
+  :ensure t
+  :bind
+  ("C-a" . mwim-beginning-of-code-or-line)
+  ("C-e" . mwim-end-of-code-or-line))
+;;undo-tree
+(use-package undo-tree
+  :ensure t
+  :init (global-undo-tree-mode)
+  :custom
+  (undo-tree-auto-save-history nil))
+;;all-the-icons
+(use-package all-the-icons
+  :if (display-graphic-p))
+(use-package all-the-icons-ivy-rich
+  :ensure t
+  :init (all-the-icons-ivy-rich-mode 1))
+(use-package ivy-rich
+  :ensure t
+  :init (ivy-rich-mode 1))
