@@ -6,9 +6,9 @@
  '(custom-enabled-themes '(srcery))
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "ff375cb365f7797dc6fdeabcce5aacefb3faa8c7877b6108f21dea9145e51382" default))
- '(org-export-backends '(ascii html icalendar latex odt))
+ '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(all-the-icons-ivy-rich all-the-icons undo-tree mwim highlight-parentheses org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(rainbow-delimiters all-the-icons-ivy-rich all-the-icons undo-tree mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -106,16 +106,12 @@
    ("C-c V" . 'ivy-pop-view)
    :map minibuffer-local-map))
 ;;rainbow-delimiters
-;;(use-package rainbow-delimiters
-;;  :ensure t
-;;  :hook
-;;  (foo-mode . rainbow-delimiters-mode)
-;;  (prog-mode . rainbow-delimiters-mode))
-;;highlight-parentheses
-(use-package highlight-parentheses
+(use-package rainbow-delimiters
   :ensure t
-  :init
-  (global-highlight-parentheses-mode t))
+  :hook
+  (foo-mode . rainbow-delimiters-mode)
+  (prog-mode . rainbow-delimiters-mode)
+  (q-mode . rainbow-delimiters-mode))
 ;;amx
 (use-package amx
   :ensure t
