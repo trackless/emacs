@@ -6,9 +6,10 @@
  '(custom-enabled-themes '(srcery))
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "ff375cb365f7797dc6fdeabcce5aacefb3faa8c7877b6108f21dea9145e51382" default))
+ '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(rainbow-delimiters all-the-icons-ivy-rich all-the-icons undo-tree mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -36,8 +37,7 @@
 ;; all backups goto ~/.backups instead in the current directory
 (setq backup-directory-alist (quote (("." . "e:/emacs-backups"))))
 ;;Setting frame size
-(add-to-list 'default-frame-alist '(height . 28))
-(add-to-list 'default-frame-alist '(width . 100))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -277,12 +277,6 @@
   :bind
   ("C-a" . mwim-beginning-of-code-or-line)
   ("C-e" . mwim-end-of-code-or-line))
-;;undo-tree
-(use-package undo-tree
-  :ensure t
-  :init (global-undo-tree-mode)
-  :custom
-  (undo-tree-auto-save-history nil))
 ;;all-the-icons
 (use-package all-the-icons
   :if (display-graphic-p))
