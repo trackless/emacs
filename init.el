@@ -3,13 +3,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(srcery))
+ '(custom-enabled-themes '(zenburn))
  '(custom-safe-themes
-   '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "ff375cb365f7797dc6fdeabcce5aacefb3faa8c7877b6108f21dea9145e51382" default))
+   '("18cf5d20a45ea1dff2e2ffd6fbcd15082f9aa9705011a3929e77129a971d1cb3" "f366d4bc6d14dcac2963d45df51956b2409a15b770ec2f6d730e73ce0ca5c8a7" default))
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -19,6 +19,7 @@
 (setq initial-scratch-message nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
+(global-auto-revert-mode t)
 (column-number-mode)
 (add-hook 'prog-mode-hook 'show-paren-mode)
 ;; Setting English Font
@@ -134,6 +135,7 @@
   (setq centaur-tabs-set-bar 'left)
   (setq centaur-tabs-set-modified-marker t)
   (setq centaur-tabs-modified-marker "*")
+  (setq centaur-tabs-close-button "X")
   :bind
   (("M-j" . 'centaur-tabs-backward)
    ("M-k" . 'centaur-tabs-forward))
@@ -286,3 +288,10 @@
 (use-package ivy-rich
   :ensure t
   :init (ivy-rich-mode 1))
+
+;; use variable-pitch fonts for some headings and titles
+(setq zenburn-use-variable-pitch t)
+;; scale headings in org-mode
+(setq zenburn-scale-org-headlines t)
+;; scale headings in outline-mode
+(setq zenburn-scale-outline-headlines t)
