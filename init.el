@@ -3,13 +3,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(zenburn))
+ '(custom-enabled-themes '(base16-tomorrow-night-eighties))
  '(custom-safe-themes
-   '("18cf5d20a45ea1dff2e2ffd6fbcd15082f9aa9705011a3929e77129a971d1cb3" "f366d4bc6d14dcac2963d45df51956b2409a15b770ec2f6d730e73ce0ca5c8a7" default))
+   '("c99bd5c62008a38af64a198d1b511509895c83ac45bb90ea8fed82f0e906ecd1" "04aa1c3ccaee1cc2b93b246c6fbcd597f7e6832a97aaeac7e5891e6863236f9f" default))
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(undo-tree jupyter base16-theme color-theme-sanityinc-tomorrow zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -19,6 +19,8 @@
 (setq initial-scratch-message nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
+(set-face-background 'hl-line "dark blue")
+(set-face-foreground 'highlight nil)
 (global-auto-revert-mode t)
 (column-number-mode)
 (add-hook 'prog-mode-hook 'show-paren-mode)
@@ -156,7 +158,15 @@
 (use-package dashboard
   :ensure t
   :config
-  (dashboard-setup-startup-hook))
+  (dashboard-setup-startup-hook)
+  :custom
+  (dashboard-banner-logo-title "Nothing Is Impossible")
+  (dashboard-set-heading-icons t)
+  (dashboard-set-file-icons t)
+  (dashboard-set-init-info t)
+  (dashboard-set-navigator t)
+  (dashboard-items '((recents . 5)
+		     (bookmarks . 5))))
 ;;evil-escape
 (use-package evil-escape
   :ensure t
@@ -289,9 +299,18 @@
   :ensure t
   :init (ivy-rich-mode 1))
 
-;; use variable-pitch fonts for some headings and titles
-(setq zenburn-use-variable-pitch t)
-;; scale headings in org-mode
-(setq zenburn-scale-org-headlines t)
-;; scale headings in outline-mode
-(setq zenburn-scale-outline-headlines t)
+;;jupyter
+(setq org-confirm-babel-evaluate nil)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (julia . t)
+   (python . t)
+   (jupyter . t)))
+
+;;undo-tree
+(use-package undo-tree
+  :ensure t
+  :init (global-undo-tree-mode)
+  :custom
+  (undo-tree-auto-save-history nil))
