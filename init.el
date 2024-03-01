@@ -3,13 +3,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(base16-tomorrow-night-eighties))
+ '(custom-enabled-themes '(base16-solarized-dark))
  '(custom-safe-themes
-   '("c99bd5c62008a38af64a198d1b511509895c83ac45bb90ea8fed82f0e906ecd1" "04aa1c3ccaee1cc2b93b246c6fbcd597f7e6832a97aaeac7e5891e6863236f9f" default))
+   '("5b01334cb330cd69e5f3d6214521c9f9d703d1c31ca0f4f04f36b6cf9f4870c8" default))
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(undo-tree jupyter base16-theme color-theme-sanityinc-tomorrow zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org srcery-theme neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(undo-tree jupyter base16-theme zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -19,13 +19,13 @@
 (setq initial-scratch-message nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
-(set-face-background 'hl-line "dark blue")
+(set-face-background 'hl-line "darkblue")
 (set-face-foreground 'highlight nil)
 (global-auto-revert-mode t)
 (column-number-mode)
 (add-hook 'prog-mode-hook 'show-paren-mode)
 ;; Setting English Font
-;;(set-face-attribute
+;(set-face-attribute
 ;; 'default nil :font "IBM Plex Mono 14")
 (set-face-attribute
  'default nil :font "IntelOne Mono 14")
