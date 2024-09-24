@@ -3,13 +3,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(base16-solarized-dark))
+ '(custom-enabled-themes '(zenburn))
  '(custom-safe-themes
-   '("5b01334cb330cd69e5f3d6214521c9f9d703d1c31ca0f4f04f36b6cf9f4870c8" default))
+   '("c7737b9fc3471779c8e51ea0a37834d24aa80a0d6a79b215e7501227ada39855" "d8b8c09a745470f6c088dce5df19ade98894f4ced69ce32d53aded94d512826d" "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "e410458d3e769c33e0865971deb6e8422457fad02bf51f7862fa180ccc42c032" "e5e253a4d31d709f1b7147fe6bb237ed2b9353685eea9a9e18652ac917f48823" default))
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(undo-tree jupyter base16-theme zenburn-theme 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org neotree org-superstar orgalist cal-china-x magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy gruvbox-theme evil)))
+   '(zenburn-theme undo-tree jupyter color-theme-sanityinc-tomorrow 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org neotree org-superstar orgalist magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -19,26 +19,27 @@
 (setq initial-scratch-message nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
-(set-face-background 'hl-line "darkblue")
+(set-face-background 'hl-line "dark blue")
+(set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
 (set-face-foreground 'highlight nil)
 (global-auto-revert-mode t)
 (column-number-mode)
 (add-hook 'prog-mode-hook 'show-paren-mode)
 ;; Setting English Font
-;(set-face-attribute
+;;(set-face-attribute
 ;; 'default nil :font "IBM Plex Mono 14")
 (set-face-attribute
- 'default nil :font "IntelOne Mono 14")
+ 'default nil :font "IntelOne Mono 18")
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
 		    charset
-		    (font-spec : "WenQuanYi Micro Hei Mono" :size 14)))
+		    (font-spec : "WenQuanYi Micro Hei Mono" :size 18)))
 ;;load-path
-(add-to-list 'load-path "d:/Program Files/emacs/.emacs.d/elpa/")
+(add-to-list 'load-path "~/.emacs.d/elpa/")
 ;;backup
 ;; all backups goto ~/.backups instead in the current directory
-(setq backup-directory-alist (quote (("." . "e:/emacs-backups"))))
+(setq backup-directory-alist (quote (("." . "~/emacs-backups"))))
 ;;Setting frame size
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (custom-set-faces
@@ -122,6 +123,11 @@
 ;;q-mode
 (autoload 'q-mode "q-mode")
 (add-to-list 'auto-mode-alist '("\\.[kq]\\'" . q-mode))
+;;calendar
+(use-package calendar
+  :config
+  ;; weeks in Bulgaria start on Monday
+  (setq calendar-week-start-day 1))
 ;;centaur-tabs
 (use-package centaur-tabs
   :ensure t
@@ -222,15 +228,15 @@
 (add-to-list 'org-capture-templates '("t" "Tasks"))
 (add-to-list 'org-capture-templates
 	     '("tw" "Work Task" entry
-	       (file+headline "e:/markdown/org/TODO/work_todo.org" "Work")
+	       (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Work")
 	       "* TODO %^{任务名} %U\n"))
 (add-to-list 'org-capture-templates
 	     '("tp" "Program Task" entry
-	       (file+headline "e:/markdown/org/TODO/work_todo.org" "Program")
+	       (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Program")
 	       "* TODO %^{任务名} %U\n"))
 (add-to-list 'org-capture-templates
 	     '("w" "Web Collection" entry
-	       (file+headline "e:/markdown/org/inbox.org" "Web")
+	       (file+headline "~/Documents/markdown/org/inbox.org" "Web")
 	       "* %^{heading} %^g\n %?\n"))
 ;; This is usually the default, but keep in mind it must be nil
 (setq org-hide-leading-stars nil)
@@ -250,14 +256,6 @@
   (setq org-superstar-headline-bullets-list'("☰" "☷" "☵" "☯"))
   :hook
   (org-mode . org-superstar-mode))
-;;cal-china-x
-(require 'cal-china-x)
-(setq mark-holidays-in-calendar t)
-(setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
-(setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
-(setq calendar-holidays
-      (append cal-china-x-important-holidays
-	      cal-china-x-general-holidays))
 ;;format whole buffer
 (defun indent-buffer()
   "Indent the whole buffer."
@@ -298,15 +296,6 @@
 (use-package ivy-rich
   :ensure t
   :init (ivy-rich-mode 1))
-
-;;jupyter
-(setq org-confirm-babel-evaluate nil)
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((emacs-lisp . t)
-   (julia . t)
-   (python . t)
-   (jupyter . t)))
 
 ;;undo-tree
 (use-package undo-tree
