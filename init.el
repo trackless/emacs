@@ -5,7 +5,7 @@
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(zenburn))
  '(custom-safe-themes
-   '("c7737b9fc3471779c8e51ea0a37834d24aa80a0d6a79b215e7501227ada39855" "d8b8c09a745470f6c088dce5df19ade98894f4ced69ce32d53aded94d512826d" "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "e410458d3e769c33e0865971deb6e8422457fad02bf51f7862fa180ccc42c032" "e5e253a4d31d709f1b7147fe6bb237ed2b9353685eea9a9e18652ac917f48823" default))
+   '("f87c86fa3d38be32dc557ba3d4cedaaea7bc3d97ce816c0e518dfe9633250e34" "c7737b9fc3471779c8e51ea0a37834d24aa80a0d6a79b215e7501227ada39855" "d8b8c09a745470f6c088dce5df19ade98894f4ced69ce32d53aded94d512826d" "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "e410458d3e769c33e0865971deb6e8422457fad02bf51f7862fa180ccc42c032" "e5e253a4d31d709f1b7147fe6bb237ed2b9353685eea9a9e18652ac917f48823" default))
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
@@ -17,6 +17,7 @@
 (electric-pair-mode t)
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
+(setq ns-pop-up-frames nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
 (set-face-background 'hl-line "dark blue")
