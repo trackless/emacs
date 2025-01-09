@@ -6,10 +6,11 @@
  '(custom-enabled-themes '(zenburn))
  '(custom-safe-themes
    '("f87c86fa3d38be32dc557ba3d4cedaaea7bc3d97ce816c0e518dfe9633250e34" "c7737b9fc3471779c8e51ea0a37834d24aa80a0d6a79b215e7501227ada39855" "d8b8c09a745470f6c088dce5df19ade98894f4ced69ce32d53aded94d512826d" "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "e410458d3e769c33e0865971deb6e8422457fad02bf51f7862fa180ccc42c032" "e5e253a4d31d709f1b7147fe6bb237ed2b9353685eea9a9e18652ac917f48823" default))
+ '(helm-minibuffer-history-key "M-p")
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(zenburn-theme undo-tree jupyter color-theme-sanityinc-tomorrow 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org neotree org-superstar orgalist magit python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy evil)))
+   '(ivy-posframe nyan-mode goto-line-preview colorful-mode magit zenburn-theme undo-tree jupyter color-theme-sanityinc-tomorrow 2048-game rainbow-delimiters all-the-icons-ivy-rich all-the-icons mwim org neotree org-superstar orgalist python-mode evil-collection savehist evil-leader csv-mode smart-mode-line company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs cpupower counsel swiper ivy evil)))
 ;;generic cofiguration
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -24,18 +25,29 @@
 (set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
 (set-face-foreground 'highlight nil)
 (global-auto-revert-mode t)
-(column-number-mode)
+(column-number-mode t)
 (add-hook 'prog-mode-hook 'show-paren-mode)
+(setq
+ default-fill-column 60
+ scroll-margin 3)
 ;; Setting English Font
 ;;(set-face-attribute
-;; 'default nil :font "IBM Plex Mono 14")
+;; 'default nil :font "IntelOne Mono 20")
+
 (set-face-attribute
- 'default nil :font "IntelOne Mono 18")
+ 'default nil :font "SF Mono-18")
+
+;; Chinese Font
+;;(dolist (charset '(kana han symbol cjk-misc bopomofo))
+;;  (set-fontset-font (frame-parameter nil 'font)
+;;		    charset
+;;		    (font-spec : "WenQuanYi Micro Hei Mono" :size 18)))
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
 		    charset
-		    (font-spec : "WenQuanYi Micro Hei Mono" :size 18)))
+		    (font-spec : "PingFang SC" :size 18)))
+
 ;;load-path
 (add-to-list 'load-path "~/.emacs.d/elpa/")
 ;;backup
@@ -105,18 +117,12 @@
   :bind
   (("C-s" . 'swiper)
    ("M-y" . 'counsel-yank-pop)
-   ("C-x b" . 'ivy-switch-buffer)
+   ("C-x b" . 'ivyswitch-buffer)
    ("C-c v" . 'ivy-push-view)
    ("C-c s" . 'ivy-switch-view)
    ("C-c V" . 'ivy-pop-view)
    :map minibuffer-local-map))
-;;rainbow-delimiters
-(use-package rainbow-delimiters
-  :ensure t
-  :hook
-  (foo-mode . rainbow-delimiters-mode)
-  (prog-mode . rainbow-delimiters-mode)
-  (q-mode . rainbow-delimiters-mode))
+
 ;;amx
 (use-package amx
   :ensure t
@@ -153,6 +159,8 @@
 ;;which-key
 (use-package which-key
   :ensure t
+  :custom
+  (which-key-show-early-on-C-h t)
   :init
   (which-key-mode 1))
 ;;set encoding
@@ -282,21 +290,42 @@
 	     do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
 (add-hook 'csv-mode-hook 'csv-highlight)
 (add-hook 'csv-mode-hook (lambda () (interactive) (toggle-truncate-lines nil)))
+
 ;;mwim
 (use-package mwim
   :ensure t
   :bind
   ("C-a" . mwim-beginning-of-code-or-line)
   ("C-e" . mwim-end-of-code-or-line))
+
 ;;all-the-icons
 (use-package all-the-icons
   :if (display-graphic-p))
+
+;;all-the-icons-ivy-rich
 (use-package all-the-icons-ivy-rich
   :ensure t
+  :after (ivy-rich)
   :init (all-the-icons-ivy-rich-mode 1))
+
 (use-package ivy-rich
   :ensure t
-  :init (ivy-rich-mode 1))
+  :after (ivy)
+  :init
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (ivy-rich-mode 1))
+
+(use-package ivy-posframe
+  :ensure t
+  :custom
+  (ivy-posframe-display-functions-alist
+   '((swiper          . ivy-posframe-display-at-point)  
+     (complete-symbol . ivy-posframe-display-at-point) 
+     (t . ivy-posframe-display)))              
+  (ivy-posframe-parameters '((left-fringe . 8)
+                             (right-fringe . 8))) 
+  :init
+  (ivy-posframe-mode 1))
 
 ;;undo-tree
 (use-package undo-tree
@@ -304,3 +333,19 @@
   :init (global-undo-tree-mode)
   :custom
   (undo-tree-auto-save-history nil))
+
+;;Colorful-mode
+(use-package colorful-mode
+  :ensure t;
+  :hook (prog-mode text-mode foo-mode q-mode))
+
+;;goto-line-preview
+(use-package goto-line-preview
+  :ensure t
+  :bind (("M-g g" . goto-line-preview)))
+
+;;nyan-mode
+(use-package nyan-mode
+  :ensure t
+  :init
+  (nyan-mode 1))
