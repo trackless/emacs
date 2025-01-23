@@ -11,6 +11,8 @@
  '(package-selected-packages
    '(neotree doom-modeline nyan-mode goto-line-preview colorful-mode magit zenburn-theme undo-tree 2048-game all-the-icons-ivy-rich all-the-icons mwim org org-superstar orgalist python-mode evil-collection savehist evil-leader csv-mode company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs counsel swiper ivy evil)))
 ;;generic cofiguration
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'super)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (toggle-scroll-bar -1)
@@ -211,7 +213,14 @@
   (setq company-idle-delay 0.1)
   (setq company-show-numbers t)
   (setq company-selection-wrap-around t)
-  (setq company-transformers '(company-sort-by-occurrence)))
+  (setq company-transformers '(company-sort-by-occurrence))
+  (setq company-backends
+	'((company-files
+	   company-keywords
+	   company-capf
+	   company-yasnippet
+	   )
+	  (company-abbrev company-dabbrev))))
 ;;;
 (use-package company-box
   :ensure t
