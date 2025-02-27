@@ -9,10 +9,8 @@
  '(org-agenda-files nil)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(neotree doom-modeline nyan-mode goto-line-preview colorful-mode magit zenburn-theme undo-tree 2048-game all-the-icons-ivy-rich all-the-icons mwim org org-superstar orgalist python-mode evil-collection savehist evil-leader csv-mode company-box company-ebdb marginalia avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs counsel swiper ivy evil)))
+   '(neotree doom-modeline nyan-mode goto-line-preview colorful-mode magit zenburn-theme undo-tree 2048-game all-the-icons-ivy-rich all-the-icons mwim org org-superstar orgalist python-mode evil-collection savehist evil-leader csv-mode company-box company-ebdb avy amx use-package q-mode evil-escape dashboard which-key centaur-tabs counsel swiper ivy evil)))
 ;;generic cofiguration
-(setq mac-command-modifier 'meta)
-(setq mac-option-modifier 'super)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (toggle-scroll-bar -1)
@@ -22,7 +20,7 @@
 (setq ns-pop-up-frames nil)
 (global-display-line-numbers-mode)
 (global-hl-line-mode t)
-(set-face-background 'hl-line "dark blue")
+(set-face-background 'hl-line "#002FA7")
 (set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
 (set-face-foreground 'highlight nil)
 (global-auto-revert-mode t)
@@ -195,14 +193,6 @@
   :ensure t
   :bind
   (("C-'" . avy-goto-char-timer)))
-;;marginalia
-(use-package marginalia
-  :ensure t
-  :init
-  (marginalia-mode 1)
-  :bind
-  (:map minibuffer-local-map
-	("M-A" . marginalia-cycle)))
 ;;company
 (use-package company
   :ensure t
