@@ -99,13 +99,6 @@
 ;; Theme / modeline / icons
 ;; -----------------------------------------------------------------------------
 
-(use-package doom-themes
-  :config
-  (load-theme 'doom-one t)
-  ;; Keep Doom's official Org faces only; no org-modern/variable-pitch/title scaling.
-  (doom-themes-org-config)
-  (doom-themes-visual-bell-config))
-
 (use-package nerd-icons)
 (use-package all-the-icons
   :if (display-graphic-p))
@@ -222,7 +215,7 @@
    ("M-s f" . consult-find)
    ("M-s l" . consult-line))
   :custom
-  (consult-preview-key 'any))
+  (consult-preview-key 'nil))
 
 (use-package embark
   :bind
@@ -469,6 +462,37 @@
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-exists-p custom-file)
   (load custom-file))
+
+;;-----------------------------------------------------------------------------
+;;简体中文与繁体中文互转
+;;-----------------------------------------------------------------------------
+(defun opencc-s2t-region (beg end)
+  "将选中的简体中文转换为繁体中文。"
+  (interactive "r")
+  (shell-command-on-region
+   beg end
+   "opencc -c s2t.json"
+   (current-buffer)
+   t))
+
+(defun opencc-s2t-buffer ()
+  "将整个 Buffer 转换为繁体中文。"
+  (interactive)
+  (opencc-s2t-region (point-min) (point-max)))
+
+(defun opencc-t2s-region (beg end)
+  "将选中的繁体中文转换为简体中文。"
+  (interactive "r")
+  (shell-command-on-region
+   beg end
+   "opencc -c t2s.json"
+   (current-buffer)
+   t))
+
+(defun opencc-t2s-buffer ()
+  "将整个 Buffer 转换为简体中文。"
+  (interactive)
+  (opencc-t2s-region (point-min) (point-max)))
 
 (provide 'init)
 ;;; init.el ends here
