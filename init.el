@@ -1,8 +1,11 @@
-;;; init.el --- Full upgraded single-file Emacs config -*- lexical-binding: t; -*-
+;;; init.el --- Personal Emacs configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Single-file upgraded configuration.
-;; Goal: modernize UI/completion/project/LSP while preserving the original Org appearance/workflow.
+;; Single-file configuration for UI, completion, project navigation, Org,
+;; programming support, CSV inspection, and small utility commands.
+;;
+;; Keep package-specific settings close to their `use-package' declarations
+;; and prefix local helpers with `my/' to avoid namespace collisions.
 
 ;;; Code:
 
@@ -37,6 +40,10 @@
 ;; Basic UI / editing defaults
 ;; -----------------------------------------------------------------------------
 
+(defconst my/backup-directory
+  (expand-file-name "backups/" user-emacs-directory)
+  "Directory used for Emacs backup files.")
+
 (setq inhibit-startup-message t
       initial-scratch-message nil
       ns-pop-up-frames nil
@@ -46,14 +53,15 @@
       scroll-margin 3
       make-backup-files t
       auto-save-default t
-      backup-directory-alist `(("." . ,(expand-file-name "backups/" user-emacs-directory)))
+      backup-directory-alist `(("." . ,my/backup-directory))
       create-lockfiles nil
       auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
       read-process-output-max (* 1024 1024)
       use-dialog-box nil
-      confirm-kill-emacs 'y-or-n-p)
+      confirm-kill-emacs 'y-or-n-p
+      recentf-max-saved-items 10)
 
-(make-directory (expand-file-name "backups/" user-emacs-directory) t)
+(make-directory my/backup-directory t)
 
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -67,7 +75,6 @@
 (savehist-mode 1)
 (recentf-mode 1)
 (show-paren-mode 1)
-(setq recentf-max-saved-items 10)
 
 (set-face-background 'hl-line "#003153")
 (set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
@@ -381,25 +388,22 @@
     (require 'org-tempo))
   (add-hook 'org-mode-hook #'my/org-mode-setup)
 
-  ;; Original capture templates.
-  (setq org-capture-templates nil)
-  (add-to-list 'org-capture-templates '("t" "Tasks"))
-  (add-to-list 'org-capture-templates
-               '("tw" "Work Task" entry
-                 (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Work")
-                 "* TODO %^{Task name} %U
-"))
-  (add-to-list 'org-capture-templates
-               '("tp" "Program Task" entry
-                 (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Program")
-                 "* TODO %^{Task name} %U
-"))
-  (add-to-list 'org-capture-templates
-               '("w" "Web Collection" entry
-                 (file+headline "~/Documents/markdown/org/inbox.org" "Web")
-                 "* %^{heading} %^g
+  ;; Keep this order identical to the previous `add-to-list' result.
+  (setq org-capture-templates
+        '(("w" "Web Collection" entry
+           (file+headline "~/Documents/markdown/org/inbox.org" "Web")
+           "* %^{heading} %^g
  %?
-")))
+")
+          ("tp" "Program Task" entry
+           (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Program")
+           "* TODO %^{Task name} %U
+")
+          ("tw" "Work Task" entry
+           (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Work")
+           "* TODO %^{Task name} %U
+")
+          ("t" "Tasks"))))
 
 (use-package org-superstar
   :after org
@@ -503,9 +507,9 @@ The field number is saved in match data property `my/csv-field-index'."
     (font-lock-flush)
     (font-lock-ensure))
 
-  (defvar-local my/csv-column-name-overlay nil)
   (defvar-local my/csv-header-cache nil)
   (defvar-local my/csv-last-point nil)
+  (defvar-local my/csv-current-column-label "")
 
   (defun my/csv-parse-header ()
     "Parse the first CSV record and cache its field names."
@@ -549,37 +553,33 @@ The field number is saved in match data property `my/csv-field-index'."
                           (max beg (point)))))
               (error nil)))))))
 
+  (defun my/csv-mode-line-column-name ()
+    "Return the current CSV column label for the mode line."
+    (when (and (derived-mode-p 'csv-mode)
+               (not (string-empty-p my/csv-current-column-label)))
+      (propertize (concat "  " my/csv-current-column-label "  ")
+                  'face '(:inherit mode-line-emphasis :weight bold))))
+
   (defun my/csv-update-column-name ()
-    "Display current CSV column name at the end of the active field."
+    "Update the current CSV column name shown in the bottom mode line."
     (when (and (derived-mode-p 'csv-mode)
                (not (eq (point) my/csv-last-point)))
       (setq my/csv-last-point (point))
       (pcase (my/csv-current-column-info)
-        (`(,index ,header ,beg ,end)
-         (unless (overlayp my/csv-column-name-overlay)
-           (setq my/csv-column-name-overlay
-                 (make-overlay beg (max (1+ beg) end) nil nil t))
-           (overlay-put my/csv-column-name-overlay 'priority 2000))
-         ;; Ensure the overlay is non-empty whenever possible.
-         (let ((real-end (if (> end beg)
-                             end
-                           (min (line-end-position) (1+ beg)))))
-           (move-overlay my/csv-column-name-overlay beg real-end (current-buffer)))
-         (overlay-put
-          my/csv-column-name-overlay
-          'after-string
-          (propertize
-           (format "  ⟪Column %d: %s⟫" index
-                   (if (string-empty-p (string-trim header)) "Unnamed" header))
-           'face '(:inherit font-lock-keyword-face :weight bold))))
+        (`(,index ,header ,_beg ,_end)
+         (setq my/csv-current-column-label
+               (format "Column %d: %s" index
+                       (if (string-empty-p (string-trim header))
+                           "Unnamed"
+                         header))))
         (_
-         (when (overlayp my/csv-column-name-overlay)
-           (delete-overlay my/csv-column-name-overlay)
-           (setq my/csv-column-name-overlay nil))))))
+         (setq my/csv-current-column-label "")))
+      (force-mode-line-update t)))
 
   (defun my/csv-refresh-header-cache (&rest _)
-    "Invalidate cached CSV headers after edits."
-    (setq my/csv-header-cache nil))
+    "Invalidate cached CSV headers and schedule a label refresh after edits."
+    (setq my/csv-header-cache nil
+          my/csv-last-point nil))
 
   (defun my/csv-debug-current-column ()
     "Show concrete CSV diagnostics for the current buffer and point."
@@ -589,41 +589,88 @@ The field number is saved in match data property `my/csv-field-index'."
       (let ((info (my/csv-current-column-info)))
         (if info
             (pcase-let ((`(,index ,header ,beg ,end) info))
-              (message "PASS csv-mode=%S field=%d header=%S range=%d..%d overlay=%S hook=%S"
+              (message "PASS csv-mode=%S field=%d header=%S range=%d..%d label=%S hook=%S"
                        major-mode index header beg end
-                       (overlayp my/csv-column-name-overlay)
+                       my/csv-current-column-label
                        (memq #'my/csv-update-column-name post-command-hook)))
           (message "FAIL: csv-mode active but field/header could not be parsed")))))
 
   (defun my/csv-self-test ()
-    "Run a deterministic self-test for CSV parsing and column lookup."
+    "Verify CSV column detection and the fixed bottom mode-line UI.
+This test intentionally checks that no cursor-following overlay is created.
+Return t on success; signal `user-error' with details on failure."
     (interactive)
-    (let ((ok nil)
-          (details ""))
+    (let ((failures nil)
+          (details nil))
       (with-temp-buffer
-        (insert "Name,Age,Note
-Alice,30,\"hello,world\"
-")
+        (insert "Name,Age,Note\nAlice,30,\"hello,world\"\n")
         (csv-mode)
-        (setq my/csv-header-cache (my/csv-parse-header))
+
+        ;; Put point inside the third field of the second row.
         (goto-char (point-min))
         (forward-line 1)
         (csv-sort-skip-fields 3)
+        (when (< (point) (line-end-position))
+          (forward-char 1))
+
+        ;; Force the same update path used while moving the cursor normally.
+        (setq my/csv-last-point nil)
+        (my/csv-update-column-name)
+
         (let* ((info (my/csv-current-column-info))
                (idx (nth 0 info))
-               (header (nth 1 info)))
-          (setq ok (and (= idx 3) (equal header "Note")))
-          (setq details (format "field=%S header=%S headers=%S" idx header my/csv-header-cache))))
-      (if ok
-          (message "PASS: CSV column-name engine works (%s)" details)
-        (user-error "FAIL: CSV column-name engine failed (%s)" details))))
+               (header (nth 1 info))
+               (label my/csv-current-column-label)
+               (mode-line-entry
+                (member '(:eval (my/csv-mode-line-column-name))
+                        mode-line-misc-info))
+               (cursor-overlays
+                (cl-remove-if-not
+                 (lambda (ov)
+                   (let ((after (overlay-get ov 'after-string)))
+                     (and after
+                          (string-match-p "Column\\|⟪" (format "%s" after)))))
+                 (overlays-in (point-min) (point-max)))))
+
+          (push (format "field=%S" idx) details)
+          (push (format "header=%S" header) details)
+          (push (format "label=%S" label) details)
+          (push (format "mode-line-entry=%S" (and mode-line-entry t)) details)
+          (push (format "cursor-column-overlays=%d" (length cursor-overlays)) details)
+
+          (unless (equal idx 3)
+            (push (format "expected field 3, got %S" idx) failures))
+          (unless (equal header "Note")
+            (push (format "expected header Note, got %S" header) failures))
+          (unless (equal label "Column 3: Note")
+            (push (format "expected bottom label Column 3: Note, got %S" label)
+                  failures))
+          (unless mode-line-entry
+            (push "mode-line column-name entry is missing" failures))
+          (when cursor-overlays
+            (push "cursor-following column-name overlay still exists" failures))))
+
+      (if failures
+          (user-error "FAIL CSV UI: %s | %s"
+                      (mapconcat #'identity (nreverse failures) "; ")
+                      (mapconcat #'identity (nreverse details) ", "))
+        (message "PASS CSV UI: %s"
+                 (mapconcat #'identity (nreverse details) ", "))
+        t)))
+
+  (defalias 'my/csv-ui-self-test #'my/csv-self-test)
 
   (defun my/csv-mode-setup ()
-    "Enable reliable CSV colours and current-column-name display."
+    "Enable reliable CSV colours and show the current column in the mode line."
     ;; csv-mode defaults to truncated lines; keep that default because it makes
     ;; column position predictable in large CSV files.
     (my/csv-install-column-colors)
     (setq my/csv-header-cache (my/csv-parse-header))
+    (setq my/csv-current-column-label "")
+    (unless (member '(:eval (my/csv-mode-line-column-name)) mode-line-misc-info)
+      (setq-local mode-line-misc-info
+                  (append mode-line-misc-info
+                          '((:eval (my/csv-mode-line-column-name))))))
     (add-hook 'post-command-hook #'my/csv-update-column-name nil t)
     (add-hook 'after-change-functions #'my/csv-refresh-header-cache nil t)
     (setq my/csv-last-point nil)
@@ -635,12 +682,13 @@ Alice,30,\"hello,world\"
 ;; Utility commands / keybindings
 ;; -----------------------------------------------------------------------------
 
-(defun indent-buffer ()
+(defun my/indent-buffer ()
   "Indent the whole buffer."
   (interactive)
-  (indent-region (point-min) (point-max) nil))
+  (indent-region (point-min) (point-max)))
 
-(global-set-key [f7] #'indent-buffer)
+(defalias 'indent-buffer #'my/indent-buffer)
+(global-set-key [f7] #'my/indent-buffer)
 
 (use-package calendar
   :ensure nil
@@ -652,39 +700,48 @@ Alice,30,\"hello,world\"
 ;; -----------------------------------------------------------------------------
 
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(when (file-exists-p custom-file)
-  (load custom-file))
+(load custom-file 'noerror 'nomessage)
 
 ;; -----------------------------------------------------------------------------
 ;; Simplified Chinese / Traditional Chinese conversion
 ;; -----------------------------------------------------------------------------
-(defun opencc-s2t-region (beg end)
-  "Convert the selected Simplified Chinese text to Traditional Chinese."
-  (interactive "r")
+
+(defun my/opencc-convert-region (beg end config)
+  "Convert region BEG..END with OpenCC CONFIG.
+CONFIG is an OpenCC configuration file such as `s2t.json'."
+  (unless (executable-find "opencc")
+    (user-error "OpenCC executable not found in PATH"))
   (shell-command-on-region
    beg end
-   "opencc -c s2t.json"
+   (format "opencc -c %s" (shell-quote-argument config))
    (current-buffer)
    t))
 
-(defun opencc-s2t-buffer ()
+(defun my/opencc-s2t-region (beg end)
+  "Convert selected Simplified Chinese text to Traditional Chinese."
+  (interactive "r")
+  (my/opencc-convert-region beg end "s2t.json"))
+
+(defun my/opencc-s2t-buffer ()
   "Convert the entire buffer to Traditional Chinese."
   (interactive)
-  (opencc-s2t-region (point-min) (point-max)))
+  (my/opencc-s2t-region (point-min) (point-max)))
 
-(defun opencc-t2s-region (beg end)
-  "Convert the selected Traditional Chinese text to Simplified Chinese."
+(defun my/opencc-t2s-region (beg end)
+  "Convert selected Traditional Chinese text to Simplified Chinese."
   (interactive "r")
-  (shell-command-on-region
-   beg end
-   "opencc -c t2s.json"
-   (current-buffer)
-   t))
+  (my/opencc-convert-region beg end "t2s.json"))
 
-(defun opencc-t2s-buffer ()
+(defun my/opencc-t2s-buffer ()
   "Convert the entire buffer to Simplified Chinese."
   (interactive)
-  (opencc-t2s-region (point-min) (point-max)))
+  (my/opencc-t2s-region (point-min) (point-max)))
+
+;; Backward-compatible command names.
+(defalias 'opencc-s2t-region #'my/opencc-s2t-region)
+(defalias 'opencc-s2t-buffer #'my/opencc-s2t-buffer)
+(defalias 'opencc-t2s-region #'my/opencc-t2s-region)
+(defalias 'opencc-t2s-buffer #'my/opencc-t2s-buffer)
 
 ;; -----------------------------------------------------------------------------
 ;; Diagnostics
