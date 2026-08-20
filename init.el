@@ -25,14 +25,11 @@
         ("melpa"  . "https://melpa.org/packages/")))
 (package-initialize)
 
-(unless package-archive-contents
-  (ignore-errors (package-refresh-contents)))
-
 (unless (package-installed-p 'use-package)
+  (unless package-archive-contents
+    (package-refresh-contents))
   (package-install 'use-package))
 
-(eval-when-compile
-  (require 'use-package))
 (require 'use-package)
 (setq use-package-always-ensure t)
 
@@ -49,12 +46,14 @@
       scroll-margin 3
       make-backup-files t
       auto-save-default t
-      backup-directory-alist '(("." . "~/emacs-backups"))
+      backup-directory-alist `(("." . ,(expand-file-name "backups/" user-emacs-directory)))
       create-lockfiles nil
       auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
       read-process-output-max (* 1024 1024)
       use-dialog-box nil
       confirm-kill-emacs 'y-or-n-p)
+
+(make-directory (expand-file-name "backups/" user-emacs-directory) t)
 
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -65,17 +64,15 @@
 (global-hl-line-mode 1)
 (global-auto-revert-mode 1)
 (column-number-mode 1)
-(save-place-mode 1)
 (savehist-mode 1)
 (recentf-mode 1)
 (show-paren-mode 1)
-(setq recentf-max-saved-items 200)
+(setq recentf-max-saved-items 10)
 
 (set-face-background 'hl-line "#003153")
 (set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
 (set-face-foreground 'highlight nil)
 
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
 (add-hook 'text-mode-hook #'visual-line-mode)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -86,14 +83,22 @@
 (set-keyboard-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
 (setq default-buffer-file-coding-system 'utf-8)
+(set-charset-priority 'unicode)
 
-;; Font: preserve original preference.
+;; Fonts
 (when (member "SF Mono" (font-family-list))
   (set-face-attribute 'default nil :font "SF Mono-18"))
 
 (when (member "PingFang SC" (font-family-list))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font t charset (font-spec :family "PingFang SC" :size 18))))
+
+;; Server
+(use-package server
+  :ensure nil
+  :config
+  (unless (server-running-p)
+    (server-start)))
 
 ;; -----------------------------------------------------------------------------
 ;; Theme / modeline / icons
@@ -173,15 +178,21 @@
   (undo-tree-auto-save-history nil))
 
 ;; -----------------------------------------------------------------------------
-;; Modern minibuffer completion: Vertico + Orderless + Consult + Marginalia
-;; Replaces Ivy/Counsel/Swiper/AMX/Ivy-rich.
+;; Minibuffer completion
 ;; -----------------------------------------------------------------------------
 
 (use-package vertico
-  :init (vertico-mode 1)
+  :init
+  (vertico-mode 1)
   :custom
   (vertico-cycle t)
-  (vertico-count 15))
+  (vertico-count 15)
+  :config
+  ;; Vertico ships this extension.  In file-name minibuffers, Backspace at
+  ;; a directory boundary removes the whole previous path component.
+  (require 'vertico-directory)
+  (keymap-set vertico-map "DEL" #'vertico-directory-delete-char)
+  (keymap-set vertico-map "<backspace>" #'vertico-directory-delete-char))
 
 (use-package orderless
   :custom
@@ -195,7 +206,9 @@
   (defun my/marginalia-annotate-file-safe (orig cand)
     (or (ignore-errors (funcall orig cand)) ""))
   :config
-  (when (fboundp 'marginalia-annotate-file)
+  (when (and (fboundp 'marginalia-annotate-file)
+             (not (advice-member-p #'my/marginalia-annotate-file-safe
+                                   'marginalia-annotate-file)))
     (advice-add 'marginalia-annotate-file :around #'my/marginalia-annotate-file-safe))
   (marginalia-mode 1))
 
@@ -207,7 +220,6 @@
    ("C-c h" . consult-history)
    ("C-c m" . consult-mode-command)
    ("C-c k" . consult-kmacro)
-   ("M-g g" . consult-goto-line)
    ("M-g M-g" . consult-goto-line)
    ("M-g i" . consult-imenu)
    ("M-g o" . consult-outline)
@@ -215,7 +227,7 @@
    ("M-s f" . consult-find)
    ("M-s l" . consult-line))
   :custom
-  (consult-preview-key 'nil))
+  (consult-preview-key nil))
 
 (use-package embark
   :bind
@@ -235,7 +247,7 @@
   (which-key-mode 1))
 
 ;; -----------------------------------------------------------------------------
-;; In-buffer completion: Corfu + Cape. Replaces Company/Company-box.
+;; In-buffer completion
 ;; -----------------------------------------------------------------------------
 
 (use-package corfu
@@ -280,8 +292,8 @@
   :bind-keymap
   ("C-c p" . projectile-command-map))
 
-;;(use-package magit
-;;  :bind (("C-x g" . magit-status)))
+(use-package magit
+  :bind (("C-x g" . magit-status)))
 
 (use-package avy
   :bind (("C-'" . avy-goto-char-timer)))
@@ -297,7 +309,7 @@
 (global-set-key (kbd "C-x C-b") #'ibuffer)
 
 ;; -----------------------------------------------------------------------------
-;; Tabs / file tree / dashboard: preserve original visual workflow
+;; Tabs / file tree / dashboard
 ;; -----------------------------------------------------------------------------
 
 (use-package centaur-tabs
@@ -338,8 +350,7 @@
                      (bookmarks . 5))))
 
 ;; -----------------------------------------------------------------------------
-;; Org mode: preserve original effect/workflow. No org-modern, no variable-pitch,
-;; no custom title scaling, no hiding emphasis markers.
+;; Org mode
 ;; -----------------------------------------------------------------------------
 
 (add-hook 'org-mode-hook #'turn-on-font-lock)
@@ -364,8 +375,11 @@
         org-outline-path-complete-in-steps nil
         org-refile-use-outline-path t)
 
-  (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
-  (add-hook 'org-mode-hook (lambda () (require 'org-tempo)))
+  (defun my/org-mode-setup ()
+    "Apply local settings used by this Org workflow."
+    (setq-local truncate-lines nil)
+    (require 'org-tempo))
+  (add-hook 'org-mode-hook #'my/org-mode-setup)
 
   ;; Original capture templates.
   (setq org-capture-templates nil)
@@ -373,15 +387,19 @@
   (add-to-list 'org-capture-templates
                '("tw" "Work Task" entry
                  (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Work")
-                 "* TODO %^{任务名} %U\n"))
+                 "* TODO %^{Task name} %U
+"))
   (add-to-list 'org-capture-templates
                '("tp" "Program Task" entry
                  (file+headline "~/Documents/markdown/org/TODO/work_todo.org" "Program")
-                 "* TODO %^{任务名} %U\n"))
+                 "* TODO %^{Task name} %U
+"))
   (add-to-list 'org-capture-templates
                '("w" "Web Collection" entry
                  (file+headline "~/Documents/markdown/org/inbox.org" "Web")
-                 "* %^{heading} %^g\n %?\n")))
+                 "* %^{heading} %^g
+ %?
+")))
 
 (use-package org-superstar
   :after org
@@ -394,7 +412,7 @@
   (org-mode . org-superstar-mode))
 
 ;; -----------------------------------------------------------------------------
-;; Programming: Tree-sitter, Eglot, language modes
+;; Programming
 ;; -----------------------------------------------------------------------------
 
 (use-package treesit-auto
@@ -402,6 +420,7 @@
   :custom
   (treesit-auto-install 'prompt)
   :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode 1))
 
 (use-package eglot
@@ -414,30 +433,203 @@
   (eglot-autoshutdown t)
   (eglot-confirm-server-initiated-edits nil))
 
-(use-package python-mode
-  :mode "\\.py\\'")
-
 (autoload 'q-mode "q-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.[kq]\\'" . q-mode))
 
 (use-package csv-mode
   :mode "\\.csv\\'"
   :config
-  (defun csv-highlight (&optional separator)
-    (interactive (list (when current-prefix-arg (read-char "Separator: "))))
-    (font-lock-mode 1)
-    (let* ((separator (or separator ?,))
-           (n (count-matches (string separator) (point-at-bol) (point-at-eol)))
-           (colors (when (> n 0)
-                     (cl-loop for i from 0 to 1.0 by (/ 2.0 n)
-                              collect (apply #'color-rgb-to-hex
-                                             (color-hsl-to-rgb i 0.3 0.5))))))
-      (cl-loop for i from 2 to n by 2
-               for c in colors
-               for r = (format "^\\([^%c\n]+%c\\)\\{%d\\}" separator separator i)
-               do (font-lock-add-keywords nil `((,r (1 '(face (:foreground ,c)))))))))
-  (add-hook 'csv-mode-hook #'csv-highlight)
-  (add-hook 'csv-mode-hook (lambda () (toggle-truncate-lines nil))))
+  (require 'cl-lib)
+  (require 'color)
+  (require 'subr-x)
+
+  (defface my/csv-column-face-1
+    '((t (:foreground "#ff6c6b")))
+    "Face for CSV column group 1.")
+  (defface my/csv-column-face-2
+    '((t (:foreground "#98be65")))
+    "Face for CSV column group 2.")
+  (defface my/csv-column-face-3
+    '((t (:foreground "#51afef")))
+    "Face for CSV column group 3.")
+  (defface my/csv-column-face-4
+    '((t (:foreground "#c678dd")))
+    "Face for CSV column group 4.")
+  (defface my/csv-column-face-5
+    '((t (:foreground "#ECBE7B")))
+    "Face for CSV column group 5.")
+  (defface my/csv-column-face-6
+    '((t (:foreground "#46D9FF")))
+    "Face for CSV column group 6.")
+
+  (defconst my/csv-column-faces
+    '(my/csv-column-face-1 my/csv-column-face-2 my/csv-column-face-3
+      my/csv-column-face-4 my/csv-column-face-5 my/csv-column-face-6))
+
+  (defun my/csv-font-lock-field-matcher (limit)
+    "Font-lock matcher for one CSV field up to LIMIT.
+The field number is saved in match data property `my/csv-field-index'."
+    (when (< (point) limit)
+      (let ((beg (point))
+            (field (csv--field-index)))
+        ;; Ensure progress and stay on the current physical CSV record.
+        (condition-case nil
+            (progn
+              (csv-end-of-field)
+              (let ((end (point)))
+                (when (= beg end)
+                  (when (< (point) limit) (forward-char 1))
+                  (setq end (point)))
+                (set-match-data (list beg end))
+                (put-text-property beg end 'my/csv-field-index field)
+                t))
+          (error
+           (goto-char (min limit (1+ beg)))
+           nil)))))
+
+  (defun my/csv-field-face ()
+    "Return a face for the current font-lock field match."
+    (let* ((field (or (get-text-property (match-beginning 0) 'my/csv-field-index) 1))
+           (idx (mod (1- field) (length my/csv-column-faces))))
+      (nth idx my/csv-column-faces)))
+
+  (defun my/csv-install-column-colors ()
+    "Install non-destructive per-column colours for this CSV buffer."
+    (font-lock-add-keywords
+     nil
+     '((my/csv-font-lock-field-matcher
+        (0 (my/csv-field-face) prepend)))
+     'append)
+    (font-lock-flush)
+    (font-lock-ensure))
+
+  (defvar-local my/csv-column-name-overlay nil)
+  (defvar-local my/csv-header-cache nil)
+  (defvar-local my/csv-last-point nil)
+
+  (defun my/csv-parse-header ()
+    "Parse the first CSV record and cache its field names."
+    (save-excursion
+      (goto-char (point-min))
+      (while (and (not (eobp)) (csv-not-looking-at-record))
+        (forward-line 1))
+      (condition-case nil
+          (if (fboundp 'csv-parse-current-row)
+              (csv-parse-current-row)
+            ;; Compatibility fallback for older csv-mode.
+            (let ((fields nil))
+              (beginning-of-line)
+              (while (not (eolp))
+                (let ((beg (point)))
+                  (csv-end-of-field)
+                  (push (string-trim
+                         (buffer-substring-no-properties beg (point)))
+                        fields))
+                (unless (eolp) (forward-char 1)))
+              (nreverse fields)))
+        (error nil))))
+
+  (defun my/csv-current-column-info ()
+    "Return (INDEX HEADER BEG END) for the CSV field at point."
+    (when (derived-mode-p 'csv-mode)
+      (let ((index (csv--field-index)))
+        (when (and index (> index 0))
+          (unless my/csv-header-cache
+            (setq my/csv-header-cache (my/csv-parse-header)))
+          (save-excursion
+            (beginning-of-line)
+            (condition-case nil
+                (progn
+                  (csv-sort-skip-fields index)
+                  (let ((beg (point)))
+                    (csv-end-of-field)
+                    (list index
+                          (or (nth (1- index) my/csv-header-cache) "Unnamed")
+                          beg
+                          (max beg (point)))))
+              (error nil)))))))
+
+  (defun my/csv-update-column-name ()
+    "Display current CSV column name at the end of the active field."
+    (when (and (derived-mode-p 'csv-mode)
+               (not (eq (point) my/csv-last-point)))
+      (setq my/csv-last-point (point))
+      (pcase (my/csv-current-column-info)
+        (`(,index ,header ,beg ,end)
+         (unless (overlayp my/csv-column-name-overlay)
+           (setq my/csv-column-name-overlay
+                 (make-overlay beg (max (1+ beg) end) nil nil t))
+           (overlay-put my/csv-column-name-overlay 'priority 2000))
+         ;; Ensure the overlay is non-empty whenever possible.
+         (let ((real-end (if (> end beg)
+                             end
+                           (min (line-end-position) (1+ beg)))))
+           (move-overlay my/csv-column-name-overlay beg real-end (current-buffer)))
+         (overlay-put
+          my/csv-column-name-overlay
+          'after-string
+          (propertize
+           (format "  ⟪Column %d: %s⟫" index
+                   (if (string-empty-p (string-trim header)) "Unnamed" header))
+           'face '(:inherit font-lock-keyword-face :weight bold))))
+        (_
+         (when (overlayp my/csv-column-name-overlay)
+           (delete-overlay my/csv-column-name-overlay)
+           (setq my/csv-column-name-overlay nil))))))
+
+  (defun my/csv-refresh-header-cache (&rest _)
+    "Invalidate cached CSV headers after edits."
+    (setq my/csv-header-cache nil))
+
+  (defun my/csv-debug-current-column ()
+    "Show concrete CSV diagnostics for the current buffer and point."
+    (interactive)
+    (if (not (derived-mode-p 'csv-mode))
+        (user-error "FAIL: current major-mode is %S, not csv-mode" major-mode)
+      (let ((info (my/csv-current-column-info)))
+        (if info
+            (pcase-let ((`(,index ,header ,beg ,end) info))
+              (message "PASS csv-mode=%S field=%d header=%S range=%d..%d overlay=%S hook=%S"
+                       major-mode index header beg end
+                       (overlayp my/csv-column-name-overlay)
+                       (memq #'my/csv-update-column-name post-command-hook)))
+          (message "FAIL: csv-mode active but field/header could not be parsed")))))
+
+  (defun my/csv-self-test ()
+    "Run a deterministic self-test for CSV parsing and column lookup."
+    (interactive)
+    (let ((ok nil)
+          (details ""))
+      (with-temp-buffer
+        (insert "Name,Age,Note
+Alice,30,\"hello,world\"
+")
+        (csv-mode)
+        (setq my/csv-header-cache (my/csv-parse-header))
+        (goto-char (point-min))
+        (forward-line 1)
+        (csv-sort-skip-fields 3)
+        (let* ((info (my/csv-current-column-info))
+               (idx (nth 0 info))
+               (header (nth 1 info)))
+          (setq ok (and (= idx 3) (equal header "Note")))
+          (setq details (format "field=%S header=%S headers=%S" idx header my/csv-header-cache))))
+      (if ok
+          (message "PASS: CSV column-name engine works (%s)" details)
+        (user-error "FAIL: CSV column-name engine failed (%s)" details))))
+
+  (defun my/csv-mode-setup ()
+    "Enable reliable CSV colours and current-column-name display."
+    ;; csv-mode defaults to truncated lines; keep that default because it makes
+    ;; column position predictable in large CSV files.
+    (my/csv-install-column-colors)
+    (setq my/csv-header-cache (my/csv-parse-header))
+    (add-hook 'post-command-hook #'my/csv-update-column-name nil t)
+    (add-hook 'after-change-functions #'my/csv-refresh-header-cache nil t)
+    (setq my/csv-last-point nil)
+    (my/csv-update-column-name))
+
+  (add-hook 'csv-mode-hook #'my/csv-mode-setup))
 
 ;; -----------------------------------------------------------------------------
 ;; Utility commands / keybindings
@@ -456,18 +648,18 @@
   (setq calendar-week-start-day 1))
 
 ;; -----------------------------------------------------------------------------
-;; Custom variables kept minimal. Prefer package configuration above.
+;; Custom file
 ;; -----------------------------------------------------------------------------
 
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-exists-p custom-file)
   (load custom-file))
 
-;;-----------------------------------------------------------------------------
-;;简体中文与繁体中文互转
-;;-----------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+;; Simplified Chinese / Traditional Chinese conversion
+;; -----------------------------------------------------------------------------
 (defun opencc-s2t-region (beg end)
-  "将选中的简体中文转换为繁体中文。"
+  "Convert the selected Simplified Chinese text to Traditional Chinese."
   (interactive "r")
   (shell-command-on-region
    beg end
@@ -476,12 +668,12 @@
    t))
 
 (defun opencc-s2t-buffer ()
-  "将整个 Buffer 转换为繁体中文。"
+  "Convert the entire buffer to Traditional Chinese."
   (interactive)
   (opencc-s2t-region (point-min) (point-max)))
 
 (defun opencc-t2s-region (beg end)
-  "将选中的繁体中文转换为简体中文。"
+  "Convert the selected Traditional Chinese text to Simplified Chinese."
   (interactive "r")
   (shell-command-on-region
    beg end
@@ -490,9 +682,26 @@
    t))
 
 (defun opencc-t2s-buffer ()
-  "将整个 Buffer 转换为简体中文。"
+  "Convert the entire buffer to Simplified Chinese."
   (interactive)
   (opencc-t2s-region (point-min) (point-max)))
+
+;; -----------------------------------------------------------------------------
+;; Diagnostics
+;; -----------------------------------------------------------------------------
+
+(defun my/find-file-backspace-self-test ()
+  "Verify that Vertico handles Backspace with directory-aware deletion."
+  (interactive)
+  (let ((del (key-binding (kbd "DEL") t))
+        (backspace (key-binding (kbd "<backspace>") t)))
+    (if (and (eq (lookup-key vertico-map (kbd "DEL"))
+                 #'vertico-directory-delete-char)
+             (eq (lookup-key vertico-map (kbd "<backspace>"))
+                 #'vertico-directory-delete-char))
+        (message "PASS: Vertico Backspace is directory-aware (DEL=%S, <backspace>=%S)"
+                 del backspace)
+      (user-error "FAIL: vertico-map Backspace binding is not active"))))
 
 (provide 'init)
 ;;; init.el ends here
